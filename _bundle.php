@@ -290,7 +290,8 @@ class ControllerAccessor {
 		/*if(method_exists($controller,'__retObj') && $this->api)
 			return call_user_func_array(array($controller, '__retObj'), array());*/
 
-		return $controller;
+		if(!$this->api) return $controller;
+		else return $controller->__phpAccess();
 
 	}
 

@@ -1,33 +1,8 @@
 <?php
 
-namespace Bundles\Controller;
+namespace Controller;
 use Exception;
 use e;
-
-/**
- * Form exception
- * @author Kelly Becker
- */
-class FormException extends Exception {
-
-	private $field;
-	private $value;
-
-	public function __construct($message, $field, $value = null, $code = null, $previous = null) {
-		parent::__construct($message, $code, $previous);
-		$this->field = $field;
-		$this->value = $value;
-	}
-
-	public function getField() {
-		return $this->field;
-	}
-
-	public function getValue() {
-		return $this->value;
-	}
-
-}
 
 /**
  * FormController

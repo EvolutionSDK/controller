@@ -41,6 +41,13 @@ abstract class ApiController {
 	protected $_reponseMessage = null;
 	protected $_reqsFailed = false;
 
+	final public function __phpAccess() {
+		if($this->_reqsFailed instanceof Exception)
+			throw $this->_reqsFailed;
+
+		return $this;
+	}
+
 	final public function __routeController($method, $args) {
 
 		/**
@@ -277,9 +284,9 @@ abstract class ApiModel extends ApiController {
 		$array = $result;
 	}
 
-	final public function __dumpFilter() {
+	/*final public function __dumpFilter() {
 		return e\ToArray($this);
-	}
+	}*/
 
 	public function __toArray() {
 		$result = $this->model->__toArray();
@@ -290,7 +297,12 @@ abstract class ApiModel extends ApiController {
 	final public function __isset($var) {
 		$array = $this->__toArray();
 
-		if(isset($array[$var]) || $array[$var] === null)
+		/*if(method_exists($this, 'information'))
+			$info = $this->information();*/
+
+		if(array_key_exists($var, $array))
+			return true;
+		else if(isset($info[$var]))
 			return true;
 
 		/**
@@ -308,8 +320,14 @@ abstract class ApiModel extends ApiController {
 
 	final public function __get($var) {
 		$array = $this->__toArray();
-		if(isset($array[$var]) || $array[$var] === null)
+
+		/*if(method_exists($this, 'information'))
+			$info = $this->information();*/
+
+		if(array_key_exists($var, $array))
 			return $array[$var];
+		if(isset($info[$var]))
+			return $info[$var];
 
 		/**
 		 * Check flags
