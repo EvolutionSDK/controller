@@ -1,6 +1,6 @@
 <?php
 
-namespace Controller;
+namespace Bundles\Controller;
 use Exception;
 use e;
 
