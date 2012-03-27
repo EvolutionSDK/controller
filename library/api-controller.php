@@ -97,7 +97,7 @@ abstract class ApiController {
 				if(!$success)
 					throw new Exception("Item could not be saved", 400);
 			}
-			elseif(empty($post))
+			elseif($this->_postMethod == true && empty($post))
 				throw new Exception("This method expects POST Data.", 412);
 		}
 
