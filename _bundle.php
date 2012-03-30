@@ -111,6 +111,18 @@ class Bundle {
 				continue;
 
 			/**
+			 * If router.php exists, use it!
+			 * @author Nate Ferrero
+			 */
+			$file = "$dir/router.php";
+			if(is_file($file)) {
+				$class = '\\Portals\\' . e::$portal->currentPortalName() . '\\Controllers\\Router';
+				require_once($file);
+				$router = new $class;
+				$router->route($path);
+			}
+
+			/**
 			 * Find File
 			 */
 			$lname = $name;
