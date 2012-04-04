@@ -96,6 +96,13 @@ abstract class ApiController {
 				$success = $result->__save($post);
 				if(!$success)
 					throw new Exception("Item could not be saved", 400);
+
+				/**
+				 * Allow overrides
+				 * @author Nate Ferrero
+				 */
+				if(is_array($success) && isset($success['result']))
+					$result = $success['result'];
 			}
 			elseif($this->_postMethod == true && empty($post))
 				throw new Exception("This method expects POST Data.", 412);
