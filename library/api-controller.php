@@ -96,6 +96,13 @@ abstract class ApiController {
 				$success = $result->__save($post);
 				if(!$success)
 					throw new Exception("Item could not be saved", 400);
+
+				/**
+				 * Allow overrides
+				 * @author Nate Ferrero
+				 */
+				if(is_array($success) && isset($success['result']))
+					$result = $success['result'];
 			}
 			elseif($this->_postMethod == true && empty($post))
 				throw new Exception("This method expects POST Data.", 412);
@@ -383,14 +390,16 @@ abstract class ApiList extends ApiController implements Iterator, Countable {
 			throw new Exception('You need to set `$this->method` in' . get_class($this));
 
 		$this->bundle = strtolower($this->bundle);
-		$this->method = strtolower($this->method);
+		//$this->method = strtolower($this->method);
 
 		/**
 		 * Set the List
 		 */
+		if(!isset(e::${$this->bundle}))
+			throw new Exception("Bundle `$this->bundle` is not installed");
 		$this->list = e::${$this->bundle}->{'get'.$this->method}($id);
 		if(!($this->list instanceof \Bundles\SQL\ListObj))
-			throw new Exception('`$this->bundle` and `$this->method` must requrn a instance of `Bundles\SQL\ListObj` in `' . get_class($this) . '`');
+			throw new Exception("`e::$$this->bundle->get$this->method()` must return a instance of `Bundles\SQL\ListObj` in `" . get_class($this) . '`');
 
 		$this->_filterList(false, $this->searchFields);
 		
