@@ -41,7 +41,7 @@ abstract class ApiController {
 	protected $_reponseMessage = null;
 	protected $_reqsFailed = false;
 
-	final public function __phpAccess() {
+	final public function __phpAccess($args) {
 		if($this->_reqsFailed instanceof Exception)
 			throw $this->_reqsFailed;
 
@@ -437,6 +437,7 @@ abstract class ApiList extends ApiController implements Iterator, Countable {
 	}
 
 	public function filter($var, $val) {
+		$this->cachedData = null;
 		$this->list->condition($var, $val);
 		if(isset($_GET['--api-list-filter']))
 			eval(d);
@@ -521,7 +522,7 @@ abstract class ApiList extends ApiController implements Iterator, Countable {
 		foreach($all as $item) {
 			if($index % $number === 0) {
 				if(isset($current)) {
-					$return[] = $current;					
+					$return[] = $current;
 				}
 				$current = array();
 			}
@@ -529,7 +530,7 @@ abstract class ApiList extends ApiController implements Iterator, Countable {
 			$index++;
 		}
 		if(isset($current)) {
-			$return[] = $current;					
+			$return[] = $current;
 		}
 		return $return;
 	}

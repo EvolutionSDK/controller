@@ -340,7 +340,7 @@ class ControllerAccessor {
 			return call_user_func_array(array($controller, '__retObj'), array());*/
 
 		if(!$this->api) return $controller;
-		else return $controller->__phpAccess();
+		else return $controller->__phpAccess($args);
 
 	}
 
