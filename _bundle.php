@@ -247,6 +247,7 @@ class Bundle {
 
 /**
  * Controller Accessor
+ * @author Nate Ferrero
  */
 class ControllerAccessor {
 
@@ -254,9 +255,15 @@ class ControllerAccessor {
 	private $class;
 	private $path;
 	private $api;
+
+	private $_segCount;
+	private $_class;
+	private $_path;
+	private $_api;
 	
 	/**
 	 * Save the path and class
+	 * @author Nate Ferrero
 	 */
 	public function __construct($path, $class) {
 		$this->api = false;
@@ -267,8 +274,10 @@ class ControllerAccessor {
 
 	/**
 	 * Continue seeking controller paths
+	 * @author Nate Ferrero
 	 */
 	public function __get($segment) {
+
 		$this->segCount = $this->segCount + 1;
 		if($segment == 'APIObject' && $this->segCount === 1) {
 			$this->api = true;
@@ -284,9 +293,35 @@ class ControllerAccessor {
 	}
 
 	/**
+	 * Grab variables
+	 * @author Nate Ferrero
+	 */
+	private function __snapshot() {
+		$this->_api = $this->api;
+		$this->_path = $this->path;
+		$this->_class = $this->class;
+		$this->_segCount = $this->segCount;
+	}
+
+	/**
+	 * Restore data after a load
+	 * @author Nate Ferrero
+	 */
+	private function __restore() {
+		$this->api = $this->_api;
+		$this->path = $this->_path;
+		$this->class = $this->_class;
+		$this->segCount = $this->_segCount;
+	}
+
+	/**
 	 * Load the controller with a function call
+	 * @author Nate Ferrero
 	 */
 	public function __call($method, $args) {
+
+		$this->__snapshot();
+
 		$this->$method;
 
 		if(!file_exists($this->path . '.php'))
@@ -294,6 +329,8 @@ class ControllerAccessor {
 		
 		e\VerifyClass($this->class);
 		$controller = new $this->class;
+
+		$this->__restore();
 
 		if(method_exists($controller,'__initControllerPattern'))
 			call_user_func_array(array($controller, '__initControllerPattern'), $args);
@@ -306,6 +343,7 @@ class ControllerAccessor {
 		else return $controller->__phpAccess();
 
 	}
+
 
 	/**
 	 * List all available controllers

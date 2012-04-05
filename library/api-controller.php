@@ -436,6 +436,11 @@ abstract class ApiList extends ApiController implements Iterator, Countable {
 		return $this;
 	}
 
+	public function filter($var, $val) {
+		$this->list->condition($var, $val);
+		return $this;
+	}
+
 	/*final public function __dumpFilter() {
 		return e\ToArray($this);
 	}*/
