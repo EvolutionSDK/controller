@@ -438,6 +438,8 @@ abstract class ApiList extends ApiController implements Iterator, Countable {
 
 	public function filter($var, $val) {
 		$this->list->condition($var, $val);
+		if(isset($_GET['--api-list-filter']))
+			dump($this->list);
 		return $this;
 	}
 
