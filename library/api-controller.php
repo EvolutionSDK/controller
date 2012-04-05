@@ -211,8 +211,6 @@ abstract class ApiModel extends ApiController {
 		$args = func_get_args();
 		$id = array_shift($args);
 
-		if(!is_numeric($id)) $id = false;
-
 		/**
 		 * If the Bundle and Method are not set throw an exception
 		 */
