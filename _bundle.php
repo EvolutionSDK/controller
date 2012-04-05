@@ -307,4 +307,16 @@ class ControllerAccessor {
 
 	}
 
+	/**
+	 * List all available controllers
+	 * @author Nate Ferrero
+	 */
+	public function __list() {
+		$out = array();
+		foreach(glob($this->path . '/*.php') as $controller) {
+			$out[] = pathinfo($controller, PATHINFO_FILENAME);
+		}
+		return $out;
+	}
+
 }
