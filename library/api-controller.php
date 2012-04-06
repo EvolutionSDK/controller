@@ -499,6 +499,10 @@ abstract class ApiList extends ApiController implements Iterator, Countable {
 		return $this->list->paging();
 	}
 
+	public function paging_html() {
+		return $this->list->paging_html();
+	}
+
 	/**
 	 * END ITERATOR METHODS ----------------------------------------------------------------
 	 */
