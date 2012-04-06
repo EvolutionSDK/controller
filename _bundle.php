@@ -38,6 +38,16 @@ class Bundle {
 		e::configure('portal')->activeAddKey('hook', 'controller', function($path, $class) {
 			return new ControllerAccessor($path . '/controllers', $class . '\\Controllers');
 		});
+
+		/**
+		 * Configure Controller Bundle
+		 * @author Kelly Becker
+		 */
+		e::configure('controller')->activeAdd('locations', e\site);
+		e::configure('autoload')->activeAddKey('special', 'Bundles\\Controller\\FormController', __DIR__ . '/library/form-controller.php');
+		e::configure('autoload')->activeAddKey('special', 'Bundles\\Controller\\ApiController', __DIR__ . '/library/api-controller.php');
+		e::configure('autoload')->activeAddKey('special', 'Bundles\\Controller\\ApiModel', __DIR__ . '/library/api-controller.php');
+		e::configure('autoload')->activeAddKey('special', 'Bundles\\Controller\\ApiList', __DIR__ . '/library/api-controller.php');
 	}
 
 	/**
@@ -55,8 +65,9 @@ class Bundle {
 	 * @author Nate Ferrero
 	 */
 	public function _on_portal_route($path, $dir) {
+
 		/**
-		 * Add the current portal
+		 * Add portal directory
 		 */
 		e::configure('controller')->activeAdd('locations', $dir);
 
@@ -79,12 +90,6 @@ class Bundle {
 	 * @author Nate Ferrero
 	 */
 	public function route($path, $dirs = null) {
-		
-		e::configure('controller')->activeAdd('locations', e\site);
-		e::configure('autoload')->activeAddKey('special', 'Bundles\\Controller\\FormController', __DIR__ . '/library/form-controller.php');
-		e::configure('autoload')->activeAddKey('special', 'Bundles\\Controller\\ApiController', __DIR__ . '/library/api-controller.php');
-		e::configure('autoload')->activeAddKey('special', 'Bundles\\Controller\\ApiModel', __DIR__ . '/library/api-controller.php');
-		e::configure('autoload')->activeAddKey('special', 'Bundles\\Controller\\ApiList', __DIR__ . '/library/api-controller.php');
 		
 		// If dirs are not specified, use defaults
 		if(is_null($dirs))
@@ -173,6 +178,11 @@ class Bundle {
 				 * @author Nate Ferrero
 				 */
 				$class = basename(dirname(dirname($dir))) . '\\' . basename(dirname($dir)) . '\\' . basename($dir) . '\\' . implode('\\', $filea);
+
+				/**
+				 * Load File if not loaded already
+				 */
+				require_once($file);
 
 				/**
 				 * Load controller
