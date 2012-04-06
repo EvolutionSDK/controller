@@ -232,7 +232,9 @@ abstract class ApiModel extends ApiController {
 		/**
 		 * Set the Model
 		 */
-		$this->model = e::${$this->bundle}->{'get'.$this->method}($id);
+		try { $this->model = e::${$this->bundle}->{'get'.$this->method}($id); }
+		catch(Exception $e) {}
+		
 		if(!$this->model) $this->model = e::${$this->bundle}->{'new'.$this->method}($id);
 		if(!($this->model instanceof \Bundles\SQL\Model))
 			throw new Exception('`$this->bundle` and `$this->method` must return a instance of `Bundles\SQL\Model` in `' . get_class($this) . '`');
