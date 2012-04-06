@@ -439,6 +439,7 @@ abstract class ApiList extends ApiController implements Iterator, Countable {
 	}
 
 	public function filter($var, $val) {
+		$this->cachedData = null;
 		$this->list->condition($var, $val);
 		if(isset($_GET['--api-list-filter']))
 			eval(d);
@@ -455,13 +456,13 @@ abstract class ApiList extends ApiController implements Iterator, Countable {
 	
 	final public function rewind() {
 		if(is_null($this->cachedData))
-			$this->cachedData = $this->list->all();
+			$this->cachedData = $this->list->all(false, true);
 		$this->position = 0;
 	}
 	
 	final public function keys() {
 		if(is_null($this->cachedData))
-			$this->cachedData = $this->list->all();
+			$this->cachedData = $this->list->all(false, true);
 
 		return array_keys($this->cachedData);
 	}
@@ -470,8 +471,12 @@ abstract class ApiList extends ApiController implements Iterator, Countable {
 		$model = $this->cachedData[$this->position];
 		if(is_null($this->model))
 			throw new Exception("Model not specified on list " . get_class($this));
-		if(is_object($model))
-			return e::portal('api')->controller->{$this->model}($model->id);
+		if(is_object($model)) {
+			$apim = e::portal('api')->controller->{$this->model}($model->id);
+			if(method_exists($this, '_modifyModel'))
+				$this->_modifyModel($apim);
+			return $apim;
+		}
 		return null;
 	}
 
@@ -489,13 +494,17 @@ abstract class ApiList extends ApiController implements Iterator, Countable {
 
 	final public function count() {
 		if(is_null($this->cachedData))
-			$this->cachedData = $this->list->all();
+			$this->cachedData = $this->list->all(false, true);
 
 		return count($this->cachedData);
 	}
 
 	public function paging() {
 		return $this->list->paging();
+	}
+
+	public function paging_html() {
+		return $this->list->paging_html();
 	}
 
 	/**
