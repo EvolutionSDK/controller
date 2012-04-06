@@ -471,8 +471,12 @@ abstract class ApiList extends ApiController implements Iterator, Countable {
 		$model = $this->cachedData[$this->position];
 		if(is_null($this->model))
 			throw new Exception("Model not specified on list " . get_class($this));
-		if(is_object($model))
-			return e::portal('api')->controller->{$this->model}($model->id);
+		if(is_object($model)) {
+			$apim = e::portal('api')->controller->{$this->model}($model->id);
+			if(method_exists($this, '_modifyModel'))
+				$this->_modifyModel($apim);
+			return $apim;
+		}
 		return null;
 	}
 
