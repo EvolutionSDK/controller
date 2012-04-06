@@ -454,13 +454,13 @@ abstract class ApiList extends ApiController implements Iterator, Countable {
 	
 	final public function rewind() {
 		if(is_null($this->cachedData))
-			$this->cachedData = $this->list->all();
+			$this->cachedData = $this->list->all(false, true);
 		$this->position = 0;
 	}
 	
 	final public function keys() {
 		if(is_null($this->cachedData))
-			$this->cachedData = $this->list->all();
+			$this->cachedData = $this->list->all(false, true);
 
 		return array_keys($this->cachedData);
 	}
