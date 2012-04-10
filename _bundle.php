@@ -5,6 +5,8 @@ use Exception;
 use stack;
 use e;
 
+class normalRoute extends Exception {}
+
 /**
  * Controller Bundle
  * @author Nate Ferrero
@@ -118,13 +120,28 @@ class Bundle {
 			/**
 			 * If router.php exists, use it!
 			 * @author Nate Ferrero
+			 * ********************
+			 * If normalRoute gets thrown then
+			 * route normally
+			 * @author Kelly Becker
 			 */
-			$file = "$dir/router.php";
-			if(is_file($file)) {
-				$class = '\\Portals\\' . e::$portal->currentPortalName() . '\\Controllers\\Router';
-				require_once($file);
-				$router = new $class;
-				$router->route($path);
+			try {
+				static $run = 0;
+				$file = "$dir/router.php";
+				if(is_file($file) && !$run) {
+					$run = 1;
+					$class = '\\Portals\\' . e::$portal->currentPortalName() . '\\Controllers\\Router';
+					require_once($file);
+					$router = new $class;
+					$router->route($path);
+				}
+			}
+			catch(normalRoute $n) {
+				$shift = (int) $n->getMessage();
+				if($shift) {
+					array_shift($path);
+					return $this->route($path, $dirs);
+				}
 			}
 
 			/**
