@@ -89,7 +89,7 @@ abstract class ApiController {
 			/**
 			 * Handle default the default post
 			 */
-			$post = e::$input->post;
+			$post = e::$resource->post;
 			if($this->_postMethod !== true && !empty($post)) {
 				if(!is_object($result) || !method_exists($result, '__save'))
 					throw new Exception("Item is not something that can be saved", 412);
@@ -144,7 +144,7 @@ abstract class ApiController {
 
 	final protected function __postMethod() {
 		$this->_postMethod = true;
-		$post = e::$input->post;
+		$post = e::$resource->post;
 
 		if(empty($post))
 			throw new Exception("This method expects POST Data.", 412);
@@ -376,32 +376,37 @@ abstract class ApiList extends ApiController implements Iterator, Countable {
 	protected $searchFields = array();
 
 	final public function __initControllerPattern() {
-		$this->listConditions = e::$input->get;
+		$this->listConditions = e::$resource->get;
 
 		/**
 		 * Grab the function arguments and the Model ID
 		 */
 		$args = func_get_args();
+		if($args[0] instanceof \Bundles\SQL\ListObj)
+			$this->list = $args[0];
 
-		/**
-		 * If the Bundle and Method are not set throw an exception
-		 */
-		if(is_null($this->bundle))
-			throw new Exception('You need to set `$this->bundle` in' . get_class($this));
-		if(is_null($this->method))
-			throw new Exception('You need to set `$this->method` in' . get_class($this));
+		else {
 
-		$this->bundle = strtolower($this->bundle);
-		//$this->method = strtolower($this->method);
+			/**
+			 * If the Bundle and Method are not set throw an exception
+			 */
+			if(is_null($this->bundle))
+				throw new Exception('You need to set `$this->bundle` in' . get_class($this));
+			if(is_null($this->method))
+				throw new Exception('You need to set `$this->method` in' . get_class($this));
 
-		/**
-		 * Set the List
-		 */
-		if(!isset(e::${$this->bundle}))
-			throw new Exception("Bundle `$this->bundle` is not installed");
-		$this->list = e::${$this->bundle}->{'get'.$this->method}($id);
-		if(!($this->list instanceof \Bundles\SQL\ListObj))
-			throw new Exception("`e::$$this->bundle->get$this->method()` must return a instance of `Bundles\SQL\ListObj` in `" . get_class($this) . '`');
+			$this->bundle = strtolower($this->bundle);
+			//$this->method = strtolower($this->method);
+
+			/**
+			 * Set the List
+			 */
+			if(!isset(e::${$this->bundle}))
+				throw new Exception("Bundle `$this->bundle` is not installed");
+			$this->list = e::${$this->bundle}->{'get'.$this->method}($id);
+			if(!($this->list instanceof \Bundles\SQL\ListObj))
+				throw new Exception("`e::$$this->bundle->get$this->method()` must return a instance of `Bundles\SQL\ListObj` in `" . get_class($this) . '`');
+		}
 
 		$this->_filterList(false, $this->searchFields);
 		
@@ -412,7 +417,7 @@ abstract class ApiList extends ApiController implements Iterator, Countable {
 	}
 
 	final protected function _filterList($args = false, $searchFields = false, $input = false) {
-		if(!$input && !$this->input) $input = e::$input->get;
+		if(!$input && !$this->input) $input = e::$resource->get;
 		if(isset($input['search-fields'])) $searchFields = json_decode($input['search-fields'], true);
 
 		if(isset($input['page']) && isset($input['page-length']))
