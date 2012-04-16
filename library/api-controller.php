@@ -354,7 +354,7 @@ abstract class ApiModel extends ApiController {
 	public function __modelPreq() {}
 
 	public function __map() {
-		return $this->bundle.'.'.$this->method.':'.$this->model->id;
+		return call_user_func_array(array($this->model, '__map'), func_get_args());
 	}
 
 }
