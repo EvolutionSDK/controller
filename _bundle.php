@@ -91,7 +91,7 @@ class Bundle {
 	 * Route or load a controller method
 	 * @author Nate Ferrero
 	 */
-	public function route($path, $dirs = null) {
+	public function route($path, $dirs = null, $tryRouter = true) {
 		
 		// If dirs are not specified, use defaults
 		if(is_null($dirs))
@@ -125,22 +125,24 @@ class Bundle {
 			 * route normally
 			 * @author Kelly Becker
 			 */
-			try {
-				static $run = 0;
-				$file = "$dir/router.php";
-				if(is_file($file) && !$run) {
-					$run = 1;
-					$class = '\\Portals\\' . e::$portal->currentPortalName() . '\\Controllers\\Router';
-					require_once($file);
-					$router = new $class;
-					$router->route($path);
+			if($tryRouter) {
+				try {
+					static $run = 0;
+					$file = "$dir/router.php";
+					if(is_file($file) && !$run) {
+						$run = 1;
+						$class = '\\Portals\\' . e::$portal->currentPortalName() . '\\Controllers\\Router';
+						require_once($file);
+						$router = new $class;
+						$router->route($path);
+					}
 				}
-			}
-			catch(normalRoute $n) {
-				$shift = (int) $n->getMessage();
-				if($shift) {
-					array_shift($path);
-					return $this->route($path, $dirs);
+				catch(normalRoute $n) {
+					$shift = (int) $n->getMessage();
+					if($shift) {
+						array_shift($path);
+						return $this->route($path, $dirs, false);
+					}
 				}
 			}
 
@@ -165,6 +167,7 @@ class Bundle {
 				 * File name
 				 */
 				$file = ($dir.'/'.($lname = implode('/', $filea)).'.php');
+
 				if(is_file($file))
 					break;
 
