@@ -293,11 +293,9 @@ abstract class ApiModel extends ApiController {
 		$array = $result;
 	}
 
-	/*final public function __dumpFilter() {
-		return e\ToArray($this);
-	}*/
-
 	public function __toArray() {
+		if(!is_object($this->model))
+			return null;
 		$result = $this->model->__toArray();
 		$this->_filterArray($result);
 		return $result;
