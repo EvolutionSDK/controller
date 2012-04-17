@@ -352,7 +352,9 @@ abstract class ApiModel extends ApiController {
 	public function __modelPreq() {}
 
 	public function __map() {
-		return call_user_func_array(array($this->model, '__map'), func_get_args());
+		if(is_object($this->model) && $this->model->id > 0)
+			return call_user_func_array(array($this->model, '__map'), func_get_args());
+		return 'unsaved-model';
 	}
 
 }
