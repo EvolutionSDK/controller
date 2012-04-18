@@ -230,14 +230,25 @@ abstract class ApiModel extends ApiController {
 		$this->method = strtolower($this->method);
 
 		/**
-		 * Set the Model
+		 * Id ID is a model
 		 */
-		try { $this->model = e::${$this->bundle}->{'get'.$this->method}($id); }
-		catch(Exception $e) {}
-		
-		if(!$this->model) $this->model = e::${$this->bundle}->{'new'.$this->method}($id);
-		if(!($this->model instanceof \Bundles\SQL\Model))
-			throw new Exception('`$this->bundle` and `$this->method` must return a instance of `Bundles\SQL\Model` in `' . get_class($this) . '`');
+		if($id instanceof \Bundles\SQL\Model)
+			$this->model = $id;
+
+		/**
+		 * Else get the model normally
+		 */
+		else {
+			/**
+			 * Set the Model
+			 */
+			try { $this->model = e::${$this->bundle}->{'get'.$this->method}($id); }
+			catch(Exception $e) {}
+			
+			if(!$this->model) $this->model = e::${$this->bundle}->{'new'.$this->method}($id);
+			if(!($this->model instanceof \Bundles\SQL\Model))
+				throw new Exception('`$this->bundle` and `$this->method` must return a instance of `Bundles\SQL\Model` in `' . get_class($this) . '`');
+		}
 
 		/**
 		 * Model prerequisites
@@ -477,7 +488,7 @@ abstract class ApiList extends ApiController implements Iterator, Countable {
 		if(is_null($this->model))
 			throw new Exception("Model not specified on list " . get_class($this));
 		if(is_object($model)) {
-			$apim = e::portal('api')->controller->{$this->model}($model->id);
+			$apim = e::portal('api')->controller->{$this->model}($model);
 			if(method_exists($this, '_modifyModel'))
 				$this->_modifyModel($apim);
 			return $apim;
