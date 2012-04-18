@@ -371,7 +371,7 @@ abstract class ApiList extends ApiController implements Iterator, Countable {
 	protected $listConditions = array();
 
 	protected $cachedData = null;
-	protected $position = 0;
+	public $position = 0;
 
 	protected $searchFields = array();
 
