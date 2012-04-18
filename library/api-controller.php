@@ -248,14 +248,14 @@ abstract class ApiModel extends ApiController {
 			if(!$this->model) $this->model = e::${$this->bundle}->{'new'.$this->method}($id);
 			if(!($this->model instanceof \Bundles\SQL\Model))
 				throw new Exception('`$this->bundle` and `$this->method` must return a instance of `Bundles\SQL\Model` in `' . get_class($this) . '`');
-		}
 
-		/**
-		 * Model prerequisites
-		 * Use for things such as verifing webapp
-		 */
-		if(($preq = $this->__modelPreq()) instanceof Exception)
-			$this->_reqsFailed = $preq;
+			/**
+			 * Model prerequisites
+			 * Use for things such as verifing webapp
+			 */
+			if(($preq = $this->__modelPreq()) instanceof Exception)
+				$this->_reqsFailed = $preq;
+		}
 
 		/**
 		 * Return the real method to run
