@@ -419,7 +419,17 @@ abstract class ApiList extends ApiController implements Iterator, Countable {
 				throw new Exception("`e::$$this->bundle->get$this->method()` must return a instance of `Bundles\SQL\ListObj` in `" . get_class($this) . '`');
 		}
 
-		$this->_filterList(false, $this->searchFields);
+		/**
+		 * Allow input through PHP
+		 * @author Nate Ferrero
+		 */
+		if(count($args) && is_array($args[0])) {
+			$input = array_shift($args);
+		} else {
+			$input = false;
+		}
+
+		$this->_filterList(false, $this->searchFields, $input);
 		
 		/**
 		 * Return the real method to run
