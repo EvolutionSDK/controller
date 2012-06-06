@@ -297,8 +297,12 @@ abstract class ApiModel extends ApiController {
 		 * Run Functions
 		 */
 		foreach($filter as $key => $val) {
-			if(strpos($val, '@') !== 0) continue;
-			$result[$key] = $this->{str_replace('@', '_', $val)}();
+			if(strpos($val, '@?') === 0) {
+				$val = $this->{str_replace('@?', '_', $val)}();
+				if(!is_null($val)) $result[$key] = $val;
+			}
+			else if(strpos($val, '@') === 0)
+				$result[$key] = $this->{str_replace('@', '_', $val)}();
 		}
 
 		$array = $result;
@@ -366,6 +370,20 @@ abstract class ApiModel extends ApiController {
 		if(is_object($this->model) && $this->model->id > 0)
 			return call_user_func_array(array($this->model, '__map'), func_get_args());
 		return 'unsaved-model';
+	}
+
+	/**
+	 * Passthru any is functions directly to the model
+	 * @author Kelly Becker
+	 */
+	public function __call($func, $args) {
+		if(strpos($func, 'is') === 0)
+			return call_user_func_array(array($this->model, $func), $args);
+	}
+
+	protected function _flags() {
+		$flags = $this->model->__getFlags();
+		return empty($flags) ? null : $flags;
 	}
 
 }
@@ -543,6 +561,22 @@ abstract class ApiList extends ApiController implements Iterator, Countable {
 			$array[] = $item;
 		}
 		return $array;
+	}
+
+	public function first() {
+		if(is_null($this->cachedData))
+			$this->cachedData = $this->list->all(false, true);
+
+		$model = $this->cachedData[0];
+
+		if(is_null($this->model))
+			throw new Exception("Model not specified on list " . get_class($this));
+		if(is_object($model)) {
+			$apim = e::portal('api')->controller->{$this->model}($model);
+			if(method_exists($this, '_modifyModel'))
+				$this->_modifyModel($apim);
+			return $apim;
+		}
 	}
 
 	/**

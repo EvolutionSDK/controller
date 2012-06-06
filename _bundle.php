@@ -250,7 +250,7 @@ class Bundle {
 				/**
 			 	 * make sure that our controller method exists before attempting to call it
 				 */
-				if(!method_exists(self::$controllers[$file], $method))
+				if(!method_exists(self::$controllers[$file], $method) && !method_exists(self::$controllers[$file], '__call'))
 					throw new Exception("Controller `$lname` exists but the method `$method` is not defined in `$file`");
 
 				$result = call_user_func_array(
@@ -381,6 +381,19 @@ class ControllerAccessor {
 		$out = array();
 		foreach(glob($this->path . '/*.php') as $controller) {
 			$out[] = pathinfo($controller, PATHINFO_FILENAME);
+		}
+		return $out;
+	}
+
+	/**
+	 * Return the an array of filename => class values
+	 * @author Kelly Becker
+	 */
+	public function __listRecursive() {
+		$out = array();
+		foreach(e\glob_recursive($this->path . '/*.php') as $controller) {
+			$removePath = stripos($controller, str_replace('\\', '/', $this->class)) + 1;
+			$out[$controller] = str_replace('/', '\\', substr($controller, $removePath, -4));
 		}
 		return $out;
 	}
