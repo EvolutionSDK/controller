@@ -397,6 +397,8 @@ abstract class ApiList extends ApiController implements Iterator, Countable {
 	protected $method = null;
 	protected $model = null;
 
+	protected $sort = false;
+
 	protected $listConditions = array();
 
 	protected $cachedData = null;
@@ -435,6 +437,10 @@ abstract class ApiList extends ApiController implements Iterator, Countable {
 			$this->list = e::${$this->bundle}->{'get'.$this->method}($id);
 			if(!($this->list instanceof \Bundles\SQL\ListObj))
 				throw new Exception("`e::$$this->bundle->get$this->method()` must return a instance of `Bundles\SQL\ListObj` in `" . get_class($this) . '`');
+		}
+
+		if(is_array($this->sort)) {
+			$this->list->order($this->sort[0], $this->sort[1]);
 		}
 
 		/**
