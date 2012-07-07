@@ -467,8 +467,9 @@ abstract class ApiList extends ApiController implements Iterator, Countable {
 
 		if(isset($input['page']) && isset($input['page-length']))
 			$this->list->page($input['page'], $input['page-length']);
-		if(isset($input['date-start']) && isset($input['date-end']))
-			$this->list->manual_condition("`created_timestamp` BETWEEN '".$input['date-start']."' AND '".$input['date-end']."'");
+		if(isset($input['date-start']) || isset($input['date-end'])) {
+			$this->_filter_daterange($input['date-start'], $input['date-end'],$input['date-field'] ? $input['date-field'] : 'created_timestamp');
+		}
 		if(is_array($args)) foreach($args as $key => $val) {
 			if(is_numeric($key))
 				$this->list->manual_condition($val);
@@ -481,10 +482,86 @@ abstract class ApiList extends ApiController implements Iterator, Countable {
 		}
 		if(isset($input['has-tag']))
 			$this->list->_->taxonomy->hasTag($input['has-tag']);
+		if(isset($input['filter']) && is_array($input['filter'])) {
+			foreach($input['filter'] as $filter) {
+				if(!$filter['value']) continue;
+				if(is_string($filter['value']))
+					$filter['value'] = addslashes($filter['value']);
+
+				if(strtoupper($filter['operator']) == 'CONTAINS') {
+					$filter['operator'] = 'LIKE';
+					$filter['value'] = '%'.$filter['value'].'%';
+				}
+
+				if(strtoupper($filter['operator']) == 'LIKE') {
+					$filter['value'] = str_replace('*', '%', $filter['value']);
+				}
+
+				if(method_exists($this, '_filter_'.$filter['field'])) {
+					call_user_func(array($this, '_filter_'.$filter['field']), $filter['value'],$filter['operator']);
+				}
+				else{
+					$this->filter($filter['field'].' '.$filter['operator'],$filter['value']);
+				}
+			}
+		}
 	}
+
+	/**
+	 * Allow custom date filtering.
+	 * @todo work off the timezone settings configured in the webapp
+	 */
+	protected function _filter_daterange($date_start = false, $date_end = false, $field = 'created_timestamp') {
+	
+		$start = $date_start ? date('Y-m-d H:i:s', strtotime($date_start,time()-(7*60*60))) : false;
+		$end = $date_end ? date('Y-m-d H:i:s', strtotime($date_end,time()-(7*60*60))) : false;
+
+
+		if(method_exists($this, '_filter_'.$field)) {
+			if($start && $end) {
+				call_user_func(array($this, '_filter_'.$field), $start,'>=');
+				call_user_func(array($this, '_filter_'.$field), $end,'<');
+			}
+
+			elseif($start)
+				call_user_func(array($this, '_filter_'.$field), $start,'>=');
+
+			elseif($end)
+				call_user_func(array($this, '_filter_'.$field), $end,'<');
+		}
+		else{
+			if($start && $end)
+				$this->list->manual_condition("`$field` >= '$start' AND  `$field` < '$end'");
+
+			elseif($start)
+				$this->list->manual_condition("`$field` >= '$start'");
+
+			elseif($end)
+				$this->list->manual_condition("`$field` < '$end'");
+		}
+
+	}
+
 
 	public function page($page = 1, $length = 10) {
 		$this->list->page($page, $length);
+		return $this;
+	}
+
+	public function json_filter($json = false) {
+		if(!$json) return $this;
+		if(strpos($json,'{') !== 0)
+			$json = $_REQUEST[$json];
+		if(!$json) return $this;
+
+		if(strpos($json,'{') === 0)
+			$filter = json_decode($json,true);
+		else {
+			$filter = array();
+			parse_str(urldecode($json), $filter);
+		}
+		if(!$filter) return $this;
+		$this->_filterList(false, $this->searchFields, $filter);
 		return $this;
 	}
 
