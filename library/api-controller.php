@@ -463,6 +463,7 @@ abstract class ApiList extends ApiController implements Iterator, Countable {
 
 	final protected function _filterList($args = false, $searchFields = false, $input = false) {
 		if(!$input && !$this->input) $input = e::$resource->get;
+
 		if(isset($input['search-fields'])) $searchFields = json_decode($input['search-fields'], true);
 
 		if(isset($input['page']) && isset($input['page-length']))
@@ -557,8 +558,13 @@ abstract class ApiList extends ApiController implements Iterator, Countable {
 		if(strpos($json,'{') === 0)
 			$filter = json_decode($json,true);
 		else {
-			$filter = array();
-			parse_str(urldecode($json), $filter);
+			$bjson = urldecode(base64_decode($json));
+			if(strpos($bjson,'{') === 0)
+				$filter = json_decode($bjson,true);
+			else {
+				$filter = array();
+				parse_str(urldecode($json), $filter);
+			}
 		}
 		if(!$filter) return $this;
 		$this->_filterList(false, $this->searchFields, $filter);
