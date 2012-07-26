@@ -461,6 +461,13 @@ abstract class ApiList extends ApiController implements Iterator, Countable {
 		return array_shift($args);
 	}
 
+	public function __call($method, $args) {
+		if(method_exists($this, '_filter_'.$method)) {
+			$this->_filterList(false, $this->searchFields, array('filter' => array(array('field' => $method, 'value' => $args[0], 'operator' => $args[1] ? $args[1] : '='))));
+		}
+		return $this;
+	}
+
 	final protected function _filterList($args = false, $searchFields = false, $input = false) {
 		if(!$input && !$this->input) $input = e::$resource->get;
 
