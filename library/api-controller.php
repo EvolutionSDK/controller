@@ -413,6 +413,7 @@ abstract class ApiList extends ApiController implements Iterator, Countable {
 		 * Grab the function arguments and the Model ID
 		 */
 		$args = func_get_args();
+		//if($this->model == 'donation') dump($args);
 		if($args[0] instanceof \Bundles\SQL\ListObj)
 			$this->list = $args[0];
 
@@ -643,8 +644,8 @@ abstract class ApiList extends ApiController implements Iterator, Countable {
 		return $this->list->paging();
 	}
 
-	public function paging_html() {
-		return $this->list->paging_html();
+	public function paging_html($getvar = 'page') {
+		return $this->list->paging_html(false, $getvar);
 	}
 
 	/**
