@@ -489,6 +489,10 @@ abstract class ApiList extends ApiController implements Iterator, Countable {
 				$query .= (!empty($query) ? ' OR ' : '')."`$field` LIKE '%$input[search]%'";
 			$this->list->manual_condition("($query)");
 		}
+		if(isset($input['status'])) {
+			$statuses = explode(',',$input['status']);
+			call_user_func_array(array($this,'status'), $statuses);
+		}
 		if(isset($input['has-tag']))
 			$this->list->_->taxonomy->hasTag($input['has-tag']);
 		if(isset($input['filter']) && is_array($input['filter'])) {
