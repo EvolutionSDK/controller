@@ -491,7 +491,7 @@ abstract class ApiList extends ApiController implements Iterator, Countable {
 		}
 		if(isset($input['status'])) {
 			$statuses = explode(',',$input['status']);
-			call_user_func_array(array($this,'status'), $statuses);
+			call_user_func_array(array($this,'has_status'), $statuses);
 		}
 		if(isset($input['has-tag']))
 			$this->list->_->taxonomy->hasTag($input['has-tag']);
