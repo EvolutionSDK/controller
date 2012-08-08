@@ -591,6 +591,27 @@ abstract class ApiList extends ApiController implements Iterator, Countable {
 		return $this;
 	}
 
+	public function order_by_information($field, $direction = 'ASC', $reset = false) {
+		return $this->sort_by_information($field, $direction, $reset);
+	}
+	public function sort_by_information($field, $direction = 'ASC', $reset = false) {
+		$direction = trim($direction);
+		$reset = !empty($reset);
+		if($direction != 'ASC' && $direction != 'DESC')
+			throw new Exception('Sort by ASC or DESC');
+		$field = trim(addslashes($field));
+		return $this->list->order("(SELECT `value` from `\$information ".$this->list->__getTable()."` where `owner` = `".$this->list->__getTable()."`.`id` AND `field` = '$field')", $direction, $reset);
+	}
+
+	public function sort($field, $direction = 'ASC', $reset = false) {
+		$direction = trim($direction);
+		$reset = !empty($reset);
+		if($direction != 'ASC' && $direction != 'DESC')
+			throw new Exception('Sort by ASC or DESC');
+		$field = trim(addslashes($field));
+		return $this->list->order($field, $direction, $reset);
+	}
+
 	/*final public function __dumpFilter() {
 		return e\ToArray($this);
 	}*/
