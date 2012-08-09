@@ -596,8 +596,9 @@ abstract class ApiList extends ApiController implements Iterator, Countable {
 	}
 	public function sort_by_information($field, $direction = 'ASC', $reset = false) {
 		$direction = trim($direction);
+		$direction = strtolower($direction);
 		$reset = !empty($reset);
-		if($direction != 'ASC' && $direction != 'DESC')
+		if($direction != 'asc' && $direction != 'desc')
 			throw new Exception('Sort by ASC or DESC');
 		$field = trim(addslashes($field));
 		$this->list->order("(SELECT `value` from `\$information ".$this->list->__getTable()."` where `owner` = `".$this->list->__getTable()."`.`id` AND `field` = '$field')", $direction, $reset);
@@ -606,8 +607,9 @@ abstract class ApiList extends ApiController implements Iterator, Countable {
 
 	public function sort($field, $direction = 'ASC', $reset = false) {
 		$direction = trim($direction);
+		$direction = strtolower($direction);
 		$reset = !empty($reset);
-		if($direction != 'ASC' && $direction != 'DESC')
+		if($direction != 'asc' && $direction != 'desc')
 			throw new Exception('Sort by ASC or DESC');
 		$field = trim(addslashes($field));
 		$this->list->order($field, $direction, $reset);
