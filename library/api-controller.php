@@ -600,7 +600,8 @@ abstract class ApiList extends ApiController implements Iterator, Countable {
 		if($direction != 'ASC' && $direction != 'DESC')
 			throw new Exception('Sort by ASC or DESC');
 		$field = trim(addslashes($field));
-		return $this->list->order("(SELECT `value` from `\$information ".$this->list->__getTable()."` where `owner` = `".$this->list->__getTable()."`.`id` AND `field` = '$field')", $direction, $reset);
+		$this->list->order("(SELECT `value` from `\$information ".$this->list->__getTable()."` where `owner` = `".$this->list->__getTable()."`.`id` AND `field` = '$field')", $direction, $reset);
+		return $this;
 	}
 
 	public function sort($field, $direction = 'ASC', $reset = false) {
@@ -609,7 +610,8 @@ abstract class ApiList extends ApiController implements Iterator, Countable {
 		if($direction != 'ASC' && $direction != 'DESC')
 			throw new Exception('Sort by ASC or DESC');
 		$field = trim(addslashes($field));
-		return $this->list->order($field, $direction, $reset);
+		$this->list->order($field, $direction, $reset);
+		return $this;
 	}
 
 	/*final public function __dumpFilter() {
