@@ -583,12 +583,51 @@ abstract class ApiList extends ApiController implements Iterator, Countable {
 		return $this;
 	}
 
-	public function filter($var, $val) {
+	public function filter($var, $val, $operator = false) {
 		$this->cachedData = null;
+		$val = addslashes($val);
+		$operator = $this->_text_to_operator($operator);
+		$var = "`$var` $operator";
 		$this->list->condition($var, $val);
 		if(isset($_GET['--api-list-filter']))
 			eval(d);
 		return $this;
+	}
+
+	public function _text_to_operator($text) {
+
+		if(empty($text)) return '=';
+
+		switch($text) {
+			case 'lte':
+				return '<=';
+			break;
+			case 'lt':
+				return '<';
+			break;
+			case 'gt':
+				return '>';
+			break;
+			case 'gte':
+				return '>=';
+			break;
+			case '=':
+			case '!=':
+			case 'LIKE':
+			case 'NOT LIKE':
+			case '>':
+			case '>=':
+			case '<=':
+			case '<':
+			case 'CONTAINS':
+			case 'IN':
+			case 'NOT IN':
+				return $text;
+			break;
+			default:
+				throw new Exception("Invalid operator.");
+			break;
+		}
 	}
 
 	public function order_by_information($field, $direction = 'ASC', $reset = false) {
