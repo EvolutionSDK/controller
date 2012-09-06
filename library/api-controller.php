@@ -40,6 +40,7 @@ abstract class ApiController {
 	protected $_reponseCode = null;
 	protected $_reponseMessage = null;
 	protected $_reqsFailed = false;
+	protected $_viaRouting = false;
 
 	final public function __phpAccess($args) {
 		if($this->_reqsFailed instanceof Exception)
@@ -54,7 +55,8 @@ abstract class ApiController {
 		 * API Authentication
 		 * Returns: accessLevel for token used
 		 */
-		$this->accessLevel = e::APIAuth("Momentum API");
+		$this->_accessLevel = e::APIAuth("Momentum API");
+		$this->_viaRouting = true;
 
 		try {
 
@@ -484,10 +486,11 @@ abstract class ApiList extends ApiController implements Iterator, Countable {
 				$this->list->manual_condition($val);
 			else $this->list->condition($key, $val);
 		}
-		if(isset($input['search']) && is_array($searchFields)) {
+		if(isset($input['search']) && is_array($searchFields) && count($searchFields) > 0) {
+			$query = array();
 			foreach($searchFields as $field)
-				$query .= (!empty($query) ? ' OR ' : '')."`$field` LIKE '%$input[search]%'";
-			$this->list->manual_condition("($query)");
+				$query[] = "`$field` LIKE '%$input[search]%'";
+			$this->list->manual_condition("(".implode(' OR ', $query).")");
 		}
 		if(isset($input['status'])) {
 			$statuses = explode(',',$input['status']);
@@ -518,6 +521,10 @@ abstract class ApiList extends ApiController implements Iterator, Countable {
 				}
 			}
 		}
+	}
+
+	public function has_tag($tag) {
+		$this->list->_->taxonomy->hasTag($tag);
 	}
 
 	/**
@@ -647,6 +654,7 @@ abstract class ApiList extends ApiController implements Iterator, Countable {
 	public function sort($field, $direction = 'ASC', $reset = false) {
 		$direction = trim($direction);
 		$direction = strtolower($direction);
+		if(!$direction) return $this;
 		$reset = !empty($reset);
 		if($direction != 'asc' && $direction != 'desc')
 			throw new Exception('Sort by ASC or DESC');
@@ -768,6 +776,32 @@ abstract class ApiList extends ApiController implements Iterator, Countable {
 			$return[] = $current;
 		}
 		return $return;
+	}
+
+}
+
+/**
+ * Handle delayed API values for local access for optimization.
+ */
+class BufferedCallback {
+
+	/**
+	 * This should be an anonymous function.
+	 */
+	private $callback;
+
+	/**
+	 * An array of arguments to pass to the callback when executed.
+	 */
+	private $args;
+
+	/**
+	 * Set the callback.
+	 */
+	public function setCallback($callback) {
+		$args = func_get_args();
+		array_shift($args);
+		$this->callback = $callback;
 	}
 
 }
