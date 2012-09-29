@@ -568,6 +568,14 @@ abstract class ApiList extends ApiController implements Iterator, Countable {
 		return $this;
 	}
 
+	public function limit($start = 0, $length = false) {
+		if($length)
+			$this->list->limit($start, $length);
+		else
+			$this->list->limit($start);
+		return $this;
+	}
+
 	public function json_filter($json = false) {
 		if(!$json) return $this;
 		if(strpos($json,'{') !== 0)
