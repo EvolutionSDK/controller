@@ -104,173 +104,178 @@ class Bundle {
 		 * Check all dirs for a matching controller
 		 */
 		if(is_array($dirs) || $dirs instanceof \Traversable) foreach($dirs as $dir) {
+			try {
 
-			/**
-			 * Look in controllers folder
-			 */
-			if(basename($dir) !== 'controllers')
-				$dir .= '/controllers';
-			
-			/**
-			 * Skip if missing
-			 */
-			if(!is_dir($dir))
-				continue;
-
-			/**
-			 * If router.php exists, use it!
-			 * @author Nate Ferrero
-			 * ********************
-			 * If normalRoute gets thrown then
-			 * route normally
-			 * @author Kelly Becker
-			 */
-			if($tryRouter) {
-				try {
-					static $run = 0;
-					$file = "$dir/router.php";
-					if(is_file($file) && !$run) {
-						$run = 1;
-						$class = '\\Portals\\' . e::$portal->currentPortalName() . '\\Controllers\\Router';
-						require_once($file);
-						$router = new $class;
-						$router->route($path);
-					}
-				}
-				catch(normalRoute $n) {
-					$shift = (int) $n->getMessage();
-					if($shift) {
-						array_shift($path);
-						return $this->route($path, $dirs, false);
-					}
-				}
-			}
-
-			/**
-			 * Find File
-			 */
-			$lname = $name;
-			$args = array();
-			$filea = explode('/', $lname);
-			$total = count($filea);
-			$i = 0;
-			while($i <= $total) {
+				/**
+				 * Look in controllers folder
+				 */
+				if(basename($dir) !== 'controllers')
+					$dir .= '/controllers';
 				
 				/**
-				 * Verify that name exists
+				 * Skip if missing
 				 */
-				$last = count($filea) - 1;
-				if($last === -1 || $filea[$last] === '')
-					break;
+				if(!is_dir($dir))
+					continue;
+
+				/**
+				 * If router.php exists, use it!
+				 * @author Nate Ferrero
+				 * ********************
+				 * If normalRoute gets thrown then
+				 * route normally
+				 * @author Kelly Becker
+				 */
+				if($tryRouter) {
+					try {
+						static $run = 0;
+						$file = "$dir/router.php";
+						if(is_file($file) && !$run) {
+							$run = 1;
+							$class = '\\Portals\\' . e::$portal->currentPortalName() . '\\Controllers\\Router';
+							require_once($file);
+							$router = new $class;
+							$router->route($path);
+						}
+					}
+					catch(normalRoute $n) {
+						$shift = (int) $n->getMessage();
+						if($shift) {
+							array_shift($path);
+							return $this->route($path, $dirs, false);
+						}
+					}
+				}
+
+				/**
+				 * Find File
+				 */
+				$lname = $name;
+				$args = array();
+				$filea = explode('/', $lname);
+				$total = count($filea);
+				$i = 0;
+				while($i <= $total) {
+					
+					/**
+					 * Verify that name exists
+					 */
+					$last = count($filea) - 1;
+					if($last === -1 || $filea[$last] === '')
+						break;
+					
+					/**
+					 * File name
+					 */
+					$file = ($dir.'/'.($lname = implode('/', $filea)).'.php');
+
+					if(is_file($file))
+						break;
+
+					array_unshift($args, array_pop($filea));
+					$i++;
+				}
+
+				/**
+				 * Skip if incorrect file
+				 */
+				if(!is_file($file))
+					continue;
+
+				$fname = basename($file);
+
+				/**
+				 * Trace
+				 */
+				e\trace(__CLASS__, "Matched controller `$fname`");
+
+				/**
+				 * Load controller if not already loaded
+				 */
+				if(!isset(self::$controllers[$file])) {
+
+					/**
+					 * Define controller class
+					 * @author Nate Ferrero
+					 */
+					$class = basename(dirname(dirname($dir))) . '\\' . basename(dirname($dir)) . '\\' . basename($dir) . '\\' . implode('\\', $filea);
+
+					/**
+					 * Load File if not loaded already
+					 */
+					require_once($file);
+
+					/**
+					 * Load controller
+					 */
+					e\VerifyClass($class);
+					self::$controllers[$file] = new $class;
+
+					/**
+					 * Cache arguments
+					 * @author Nate Ferrero
+					 * @rationale Init Controller needs to get the same args as Init Controller Pattern
+					 */
+					$oargs = $args;
+
+					if(method_exists(self::$controllers[$file],'__initControllerPattern'))
+						$newArgs = call_user_func_array(array(self::$controllers[$file], '__initControllerPattern'), $oargs);
+
+					if(is_array($newArgs))
+						$args = $newArgs;
+
+					if(method_exists(self::$controllers[$file],'__initController'))
+						$newArgs = call_user_func_array(array(self::$controllers[$file], '__initController'), $oargs);
+
+					if(is_array($newArgs))
+						$args = $newArgs;
+
+				}
+
+				/**
+				 * Get the method name
+				 */
+				$method = !empty($args) ? array_shift($args) : 'index';
+
+				/**
+			 	 * Call the appropriate controller method with the remaining path elements as arguments
+				 */
+				if(method_exists(self::$controllers[$file], '__routeController')) {
+					$result = call_user_func_array(
+						array(self::$controllers[$file], '__routeController'),
+						array($method, $args)
+					);
+				}
 				
+				else {
+					/**
+				 	 * make sure that our controller method exists before attempting to call it
+					 */
+					if(!method_exists(self::$controllers[$file], $method) && !method_exists(self::$controllers[$file], '__call'))
+						throw new Exception("Controller `$lname` exists but the method `$method` is not defined in `$file`");
+
+					$result = call_user_func_array(
+						array(self::$controllers[$file], $method),
+						$args
+					);
+				}
+
 				/**
-				 * File name
+				 * If the controller has a shutdown methods, run them.
 				 */
-				$file = ($dir.'/'.($lname = implode('/', $filea)).'.php');
+				if(method_exists(self::$controllers[$file],'__shutdownController'))
+					self::$controllers[$file]->__shutdownController();
+				if(method_exists(self::$controllers[$file],'__shutdownControllerPattern'))
+					self::$controllers[$file]->__shutdownControllerPattern();
 
-				if(is_file($file))
-					break;
-
-				array_unshift($args, array_pop($filea));
-				$i++;
+				/**
+				 * Complete the page load
+				 */
+				e\complete($result);
 			}
-
-			/**
-			 * Skip if incorrect file
-			 */
-			if(!is_file($file))
-				continue;
-
-			$fname = basename($file);
-
-			/**
-			 * Trace
-			 */
-			e\trace(__CLASS__, "Matched controller `$fname`");
-
-			/**
-			 * Load controller if not already loaded
-			 */
-			if(!isset(self::$controllers[$file])) {
-
-				/**
-				 * Define controller class
-				 * @author Nate Ferrero
-				 */
-				$class = basename(dirname(dirname($dir))) . '\\' . basename(dirname($dir)) . '\\' . basename($dir) . '\\' . implode('\\', $filea);
-
-				/**
-				 * Load File if not loaded already
-				 */
-				require_once($file);
-
-				/**
-				 * Load controller
-				 */
-				e\VerifyClass($class);
-				self::$controllers[$file] = new $class;
-
-				/**
-				 * Cache arguments
-				 * @author Nate Ferrero
-				 * @rationale Init Controller needs to get the same args as Init Controller Pattern
-				 */
-				$oargs = $args;
-
-				if(method_exists(self::$controllers[$file],'__initControllerPattern'))
-					$newArgs = call_user_func_array(array(self::$controllers[$file], '__initControllerPattern'), $oargs);
-
-				if(is_array($newArgs))
-					$args = $newArgs;
-
-				if(method_exists(self::$controllers[$file],'__initController'))
-					$newArgs = call_user_func_array(array(self::$controllers[$file], '__initController'), $oargs);
-
-				if(is_array($newArgs))
-					$args = $newArgs;
-
+			catch(normalRoute $e) {
+				return;
 			}
-
-			/**
-			 * Get the method name
-			 */
-			$method = !empty($args) ? array_shift($args) : 'index';
-
-			/**
-		 	 * Call the appropriate controller method with the remaining path elements as arguments
-			 */
-			if(method_exists(self::$controllers[$file], '__routeController')) {
-				$result = call_user_func_array(
-					array(self::$controllers[$file], '__routeController'),
-					array($method, $args)
-				);
-			}
-			
-			else {
-				/**
-			 	 * make sure that our controller method exists before attempting to call it
-				 */
-				if(!method_exists(self::$controllers[$file], $method) && !method_exists(self::$controllers[$file], '__call'))
-					throw new Exception("Controller `$lname` exists but the method `$method` is not defined in `$file`");
-
-				$result = call_user_func_array(
-					array(self::$controllers[$file], $method),
-					$args
-				);
-			}
-
-			/**
-			 * If the controller has a shutdown methods, run them.
-			 */
-			if(method_exists(self::$controllers[$file],'__shutdownController'))
-				self::$controllers[$file]->__shutdownController();
-			if(method_exists(self::$controllers[$file],'__shutdownControllerPattern'))
-				self::$controllers[$file]->__shutdownControllerPattern();
-
-			/**
-			 * Complete the page load
-			 */
-			e\complete($result);
 		}
 	}
 }
